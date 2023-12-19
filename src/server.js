@@ -2,7 +2,7 @@ import http from 'node:http';
 
 const users = []
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
     const { method, url } = req
 
     if (method === "GET" && url === "/users") {
@@ -12,11 +12,19 @@ const server = http.createServer((req, res) => {
     }
 
     if (method === "POST" && url === "/users") {
-        users.push({
-            name: "Fulano",
-            id: 1,
-            email: 'fulano@gmail.com'
-        })
+        const buffers = []
+        for await (const chunk of req) {
+            buffers.push(chunk)
+        }
+        try {
+            const body = JSON.parse(
+                Buffer.concat(buffers).toString()
+            )
+            users.push(body)
+        } catch(e) {
+            if (e instanceof Error) console.log(e)
+            return res.writeHead(400).end('Body was empty')
+        }
         return res.writeHead(201).end()
     }
 
