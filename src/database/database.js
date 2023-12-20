@@ -17,8 +17,19 @@ export class Database {
         fs.writeFile(databasePath, JSON.stringify(this.#database))
     }
 
-    select(table) {
-        const data = this.#database[table] ?? []
+    select(table, search) {
+        let data = this.#database[table] ?? []
+        if (search) {
+            const query = {
+                name: search,
+                email: search
+            }
+            data = data.filter(row => {
+                return Object.entries(query).some(([key, value]) => {
+                    return row[key].toLowerCase().includes(value.toLowerCase())
+                })
+            })
+        }
         return data
     }
 
@@ -37,6 +48,17 @@ export class Database {
 
         if (rowIndex > -1) {
             this.#database[table].splice(rowIndex, 1)
+            this.#persist()
+        } else {
+            throw new Error('User not found')
+        }
+    }
+
+    update(table, id, data) {
+        const rowIndex = this.#database[table].findIndex(row => row.id === id)
+
+        if (rowIndex > -1) {
+            this.#database[table][rowIndex] = {id, ...data}
             this.#persist()
         } else {
             throw new Error('User not found')

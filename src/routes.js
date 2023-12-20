@@ -9,7 +9,8 @@ export const routes = [
         method: 'GET',
         path: parseRoutePath('/users'),
         handler: (req, res) => {
-            const users = database.select('users')
+            const { search } = req.queryParams
+            const users = database.select('users', search)
             return res
                 .end(JSON.stringify(users))
         }
@@ -41,6 +42,23 @@ export const routes = [
                     return res.writeHead(204).end()
                 } catch {
                     return res.writeHead(404).end('User does not exist || already removed')
+                }
+            }
+            return res.writeHead(400).end('Id not specified')
+        }
+    },
+    {
+        method: 'PUT',
+        path: parseRoutePath('/users/:id'),
+        handler: (req, res) => {
+            const id = req.params.id
+            const data = req.body
+            if (id) {
+                try {
+                    database.update('users', id, data)
+                    return res.writeHead(200).end()
+                } catch {
+                    return res.writeHead(404).end('User does not exist')
                 }
             }
             return res.writeHead(400).end('Id not specified')
